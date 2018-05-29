@@ -1,18 +1,9 @@
-# -*- coding: utf-8 -*-
-# 中文分词、计算TF—IDF、Kmeans聚类
-# 外部文件：sqlite数据库 data.db
-# 表结构为 news (id interger,title varchar(255),content text,clicks interger,date text，type interger)
-# 输入为数据库的title和content列
-# 输出为更新数据库的type列
 import csv
-import json
 import re
 import sqlite3
 import sys
 
 import jieba
-from sklearn.cluster import KMeans
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -42,7 +33,7 @@ def fenci(rows):
     result = []
     for row in rows:
         text = dig.sub('', line.sub('\n', dr.sub('', row[0])+dr.sub('', row[1]))).replace('&nbsp;', '').replace('&gt;', '>').replace(
-            '&lt;', '<').replace('\t', '').replace('&amp;', '&').replace('&quot;', '"').decode('utf8', 'ignore')[0:100].encode('utf8')
+            '&lt;', '<').replace('\t', '').replace('&amp;', '&').replace('&quot;', '"').replace('•', '').replace('▼', '').decode('utf8', 'ignore')[0:100].encode('utf8')
         words = delstop(text, stopwords)
         result.append(words)
         # result.append(jieba.analyse.extract_tags(text,20))
@@ -70,50 +61,15 @@ def delstop(words, stopset):
     return new_words
 
 
-# 更新数据库
-def updatesql(result):
-    conn = sqlite3.connect(databasename)
-    conn.text_factory = str
-    cursor = conn.cursor()
-    for i in range(len(result)):
-        cursor.execute('UPDATE news SET type =%s WHERE id=%s' %
-                       (result[i], i+1))
-    cursor.close()
-    conn.commit()
-    conn.close()
+def outfile(lines):
+    with open('words.txt', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(lines)
 
 
-# 计算TF-IDF
-def gettfidf(lines):
-    text = []
-    for line in lines:
-        words = ""
-        for word in line:
-            words += word+" "
-        text.append(words)
-    vectorizer = CountVectorizer()
-    transformer = TfidfTransformer()
-    tfidf = transformer.fit_transform(vectorizer.fit_transform(text))
-    return tfidf
-
-
-# Kmeans聚类
-def process(tfidf):
-    km_cluster = KMeans(n_clusters=10, max_iter=100, n_init=10,
-                        init='k-means++', n_jobs=6)
-    result = km_cluster.fit_predict(tfidf)
-    return result
-
-
-if __name__ == '__main__':
-    print "读取数据..."
-    rows = getdata(databasename)
-    stopwords = stopword('stopword.txt')
-    print "分词..."
-    lines = fenci(rows)
-    print "求tf-idf..."
-    tfidf = gettfidf(lines)
-    print 'K-means...'
-    result = process(tfidf)
-    print "更新分类..."
-    updatesql(result)
+print "读取数据..."
+rows = getdata(databasename)
+stopwords = stopword('stopword.txt')
+print "分词..."
+lines = fenci(rows)
+outfile(lines)
