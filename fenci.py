@@ -1,18 +1,27 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+# 中文分词、计算TF—IDF、Kmeans聚类
+# 外部文件：sqlite数据库 data.db
+# 表结构为 news (id interger,title varchar(255),content text,clicks interger,date text，type interger)
+# 输入为数据库的title和content列
+# 输出为更新数据库的type列
+import csv
 import json
 import re
 import sqlite3
-import jieba
-import jieba.analyse
-import csv
 import sys
+
+import jieba
+from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 databasename = 'data.db'
-stopwords=''
+stopwords = ''
 
+
+# 数据库读数据 从sqlite数据库
 def getdata(databasename):
     conn = sqlite3.connect(databasename)
     conn.text_factory = str
@@ -25,19 +34,22 @@ def getdata(databasename):
     return re
 
 
+# 每个新闻取前100个词进行中文分词 输出为list[list]
 def fenci(rows):
     dr = re.compile(r'</?\w+[^>]*>')
     line = re.compile(r'\n+')
+    dig = re.compile(r'[0-9]|[A-Z]|[a-z]')
     result = []
     for row in rows:
-        text = line.sub('\n', dr.sub('', row[0])+dr.sub('', row[1]).replace('&nbsp;', '').replace(
-            '&gt;', '>').replace('&lt;', '<').replace('&amp;', '&').replace('&quot;', '"')).decode('utf8', 'ignore')[0:100].encode('utf8')
-        words=delstop(text,stopwords)
+        text = dig.sub('', line.sub('\n', dr.sub('', row[0])+dr.sub('', row[1]))).replace('&nbsp;', '').replace('&gt;', '>').replace(
+            '&lt;', '<').replace('\t', '').replace('&amp;', '&').replace('&quot;', '"').decode('utf8', 'ignore')[0:100].encode('utf8')
+        words = delstop(text, stopwords)
         result.append(words)
         # result.append(jieba.analyse.extract_tags(text,20))
     return result
 
 
+# 获取停止词 输出位set
 def stopword(stopword):
     with open(stopword, "r") as fp:
         words = fp.read()
@@ -48,6 +60,7 @@ def stopword(stopword):
     return set(new_words)
 
 
+# 去除停止词 输出为list
 def delstop(words, stopset):
     result = jieba.cut(words)
     new_words = []
@@ -57,17 +70,48 @@ def delstop(words, stopset):
     return new_words
 
 
-rows = getdata(databasename)
-stopwords=stopword('stopword.txt')
-# jieba.analyse.set_stop_words('stopword.txt')
-lines = fenci(rows)
-with open('words.csv', 'wb') as f:
-    writer = csv.writer(f)
-    writer.writerows(lines)
-    # for line in lines:
-    #     for word in line:
-    #         f.write(unicode(word, encoding="utf-8"))
-    #         f.write(',')
-    #     f.write('\n')
+def updatesql(result):
+    conn = sqlite3.connect(databasename)
+    conn.text_factory = str
+    cursor = conn.cursor()
+    for i in range(len(result)):
+        cursor.execute('UPDATE news SET type =%s WHERE id=%s' %
+                       (result[i], i+1))
+    cursor.close()
+    conn.commit()
+    conn.close()
 
 
+def gettfidf(lines):
+    text = []
+    for line in lines:
+        words = ""
+        for word in line:
+            words += word+" "
+        text.append(words)
+    vectorizer = CountVectorizer()
+    transformer = TfidfTransformer()
+    tfidf = transformer.fit_transform(vectorizer.fit_transform(text))
+    return tfidf
+
+
+def process(tfidf):
+    km_cluster = KMeans(n_clusters=10, max_iter=100, n_init=10,
+                        init='k-means++', n_jobs=6)
+    result = km_cluster.fit_predict(tfidf)
+    return result
+
+
+if __name__ == '__main__':
+    print "读取数据..."
+    rows = getdata(databasename)
+    stopwords = stopword('stopword.txt')
+    # jieba.analyse.set_stop_words('stopword.txt')
+    print "分词..."
+    lines = fenci(rows)
+    print "求tf-idf..."
+    tfidf = gettfidf(lines)
+    print 'K-means...'
+    result = process(tfidf)
+    print "更新分类..."
+    updatesql(result)
