@@ -70,6 +70,7 @@ def delstop(words, stopset):
     return new_words
 
 
+# 更新数据库
 def updatesql(result):
     conn = sqlite3.connect(databasename)
     conn.text_factory = str
@@ -82,6 +83,7 @@ def updatesql(result):
     conn.close()
 
 
+# 计算TF-IDF
 def gettfidf(lines):
     text = []
     for line in lines:
@@ -95,6 +97,7 @@ def gettfidf(lines):
     return tfidf
 
 
+# Kmeans聚类
 def process(tfidf):
     km_cluster = KMeans(n_clusters=10, max_iter=100, n_init=10,
                         init='k-means++', n_jobs=6)
@@ -106,7 +109,6 @@ if __name__ == '__main__':
     print "读取数据..."
     rows = getdata(databasename)
     stopwords = stopword('stopword.txt')
-    # jieba.analyse.set_stop_words('stopword.txt')
     print "分词..."
     lines = fenci(rows)
     print "求tf-idf..."
