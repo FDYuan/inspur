@@ -44,14 +44,18 @@ def updatesql(result):
 def gettfidf(lines):
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
-    tfidf = transformer.fit_transform(vectorizer.fit_transform(lines))
-    # names=vectorizer.get_feature_names()
-    return tfidf
+    mat=vectorizer.fit_transform(lines)
+    tfidf = transformer.fit_transform(mat)
+    names=vectorizer.get_feature_names()
+    np.save('mat',mat)
+    np.save('names',names)
+    X = tfidf.toarray()
+    return X,tfidf
 
 
 # Kmeans聚类
 def process(tfidf, k):
-    km_cluster = KMeans(n_clusters=k, max_iter=100, n_init=1,
+    km_cluster = KMeans(n_clusters=k, max_iter=100, n_init=10,
                         init='k-means++')
     # km_cluster = MiniBatchKMeans(n_clusters=10, max_iter=100, n_init=1,
     #                     init='k-means++',init_size=3000,batch_size=1000)
@@ -89,24 +93,19 @@ def Draw(silhouette_avg, sample_silhouette_values, X, y, k):
     ax1.axvline(x=silhouette_avg, color='red', linestyle="--")
     plt.show()
 
-
-if __name__ == '__main__':
-    k = 10
+if __name__=='__main__':
+    print u"Begin"
     lines=getlist()
-    print "求tf-idf..."
-    tfidf = gettfidf(lines)
-    start = time.time()
-    print 'K-means...'
-    result = process(tfidf, k)
-    end = time.time()
-    print end-start
-    print "更新分类..."
-    updatesql(result)
-    print '评估...'
-    names = tfidf.toarray()
-    print metrics.calinski_harabaz_score(names, result)
-    silhouette_avg = metrics.silhouette_score(names, result)  # 平均轮廓系数
-    print silhouette_avg
-    # 每个点的轮廓系数
-    sample_silhouette_values = metrics.silhouette_samples(names, result)
-    Draw(silhouette_avg, sample_silhouette_values, names, result, k)
+    print u"求tf-idf..."
+    X,tfidf = gettfidf(lines)
+    print u'K-means...'
+    for k in range(2,26):
+        result = process(tfidf, k)
+        print metrics.calinski_harabaz_score(X, result)
+    #print u"更新分类..."
+    #updatesql(result)
+    print u'评估...'
+    #silhouette_avg = metrics.silhouette_score(X, result)  # 平均轮廓系数
+    #print silhouette_avg # 每个点的轮廓系数
+    #sample_silhouette_values = metrics.silhouette_samples(X, result)
+    #Draw(silhouette_avg, sample_silhouette_values, X, result, k)
