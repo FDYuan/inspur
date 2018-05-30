@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import metrics
-from sklearn.cluster import KMeans, MiniBatchKMeans
+from sklearn.cluster import KMeans, MiniBatchKMeans,AgglomerativeClustering
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 databasename = 'data.db'
@@ -55,10 +55,11 @@ def gettfidf(lines):
 
 # Kmeans聚类
 def process(tfidf, k):
-    km_cluster = KMeans(n_clusters=k, max_iter=100, n_init=10,
+    km_cluster = KMeans(n_clusters=k, max_iter=100, n_init=1,
                         init='k-means++')
     # km_cluster = MiniBatchKMeans(n_clusters=10, max_iter=100, n_init=1,
     #                     init='k-means++',init_size=3000,batch_size=1000)
+    # km_cluster = AgglomerativeClustering(n_clusters=k)
     result = km_cluster.fit_predict(tfidf)
     return result
 
@@ -99,9 +100,9 @@ if __name__=='__main__':
     print u"求tf-idf..."
     X,tfidf = gettfidf(lines)
     print u'K-means...'
-    for k in range(2,26):
-        result = process(tfidf, k)
-        print metrics.calinski_harabaz_score(X, result)
+    # for k in range(2,26):
+    result = process(tfidf, 10)
+    print metrics.calinski_harabaz_score(X, result)
     #print u"更新分类..."
     #updatesql(result)
     print u'评估...'

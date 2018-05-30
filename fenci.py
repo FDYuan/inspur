@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import csv
 import re
 import sqlite3
@@ -26,14 +27,14 @@ class FenCi:
         return re
 
     # 每个新闻取前100个词进行中文分词 输出为list[list]
-    def fenci(self, rows, stopwords):
+    def fenci(self, rows, stopwords,x=100):
         dr = re.compile(r'</?\w+[^>]*>')
         line = re.compile(r'\n+')
         dig = re.compile(r'[0-9]|[A-Z]|[a-z]')
         result = []
         for row in rows:
             text = dig.sub('', line.sub('\n', dr.sub('', row[0])+dr.sub('', row[1]))).replace('&nbsp;', '').replace('&gt;', '>').replace(
-                '&lt;', '<').replace('\t', '').replace('&amp;', '&').replace('&quot;', '"').replace('•', '').replace('▼', '').decode('utf8', 'ignore')[0:100].encode('utf8')
+                '&lt;', '<').replace('\t', '').replace('&amp;', '&').replace('&quot;', '"').replace('•', '').replace('▼', '').decode('utf8', 'ignore')[:x].encode('utf8')
             words = self.delstop(text, stopwords)
             result.append(words)
             # result.append(jieba.analyse.extract_tags(text,20))
