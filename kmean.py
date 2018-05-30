@@ -4,16 +4,17 @@
 # 表结构为 news (id interger,title varchar(255),content text,clicks interger,date text，type interger)
 # 输入为数据库的title和content列
 # 输出为更新数据库的type列
-import sqlite3
-import time
 import codecs
+import sqlite3
 import sys
+import time
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial.distance import cdist
 from sklearn import metrics
-from sklearn.cluster import KMeans, MiniBatchKMeans,AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 databasename = 'data.db'
@@ -22,7 +23,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 def getlist():
     lines=[]
-    with codecs.open('words.csv', 'r', 'utf-8') as f:
+    with codecs.open('cut.csv', 'r', 'utf-8') as f:
         for line in f:
             lines.append(str(line).replace(',',' '))
     return lines
@@ -94,18 +95,30 @@ def Draw(silhouette_avg, sample_silhouette_values, X, y, k):
     ax1.axvline(x=silhouette_avg, color='red', linestyle="--")
     plt.show()
 
+
+def getplot(point):
+    plt.plot(10, point, 'bx-')
+    plt.grid(True) 
+    plt.xlabel('Number of clusters') 
+    plt.ylabel('Average within-cluster sum of squares') 
+    plt.title('Elbow for Kmeans clustering')
+    plt.show()
+
 if __name__=='__main__':
     print u"Begin"
     lines=getlist()
     print u"求tf-idf..."
     X,tfidf = gettfidf(lines)
     print u'K-means...'
-    # for k in range(2,26):
-    result = process(tfidf, 10)
-    print metrics.calinski_harabaz_score(X, result)
+    point=[]
+    for k in range(2,10):
+        result = process(tfidf, k)
+        print metrics.calinski_harabaz_score(X, result)
+        point.append(sum(np.min(cdist(X, result.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0]) 
+    print u'评估...'
+    getplot(point)
     #print u"更新分类..."
     #updatesql(result)
-    print u'评估...'
     #silhouette_avg = metrics.silhouette_score(X, result)  # 平均轮廓系数
     #print silhouette_avg # 每个点的轮廓系数
     #sample_silhouette_values = metrics.silhouette_samples(X, result)

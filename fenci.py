@@ -5,6 +5,7 @@ import sqlite3
 import sys
 
 import jieba
+import jieba.analyse
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -35,9 +36,9 @@ class FenCi:
         for row in rows:
             text = dig.sub('', line.sub('\n', dr.sub('', row[0])+dr.sub('', row[1]))).replace('&nbsp;', '').replace('&gt;', '>').replace(
                 '&lt;', '<').replace('\t', '').replace('&amp;', '&').replace('&quot;', '"').replace('•', '').replace('▼', '').decode('utf8', 'ignore')[:x].encode('utf8')
-            words = self.delstop(text, stopwords)
-            result.append(words)
-            # result.append(jieba.analyse.extract_tags(text,20))
+            # words = self.delstop(text, stopwords)
+            # result.append(words)
+            result.append(jieba.analyse.extract_tags(text,20))
         return result
 
     # 获取停止词 输出位set
@@ -52,7 +53,7 @@ class FenCi:
 
     # 去除停止词 输出为list
     def delstop(self, words, stopset):
-        result = jieba.cut(words)
+        result = jieba.cut_for_search(words)
         new_words = []
         for r in result:
             if r not in stopset:
@@ -60,7 +61,7 @@ class FenCi:
         return new_words
 
     def outfile(self, lines):
-        with open('words.txt', 'w') as f:
+        with open('analyse.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(lines)
 
@@ -68,7 +69,9 @@ class FenCi:
 fenci = FenCi()
 print "读取数据..."
 rows = fenci.getdata(databasename)
-stopwords = fenci.stopword(stopname)
+jieba.analyse.set_stop_words('stopword.txt')
+# stopwords = fenci.stopword(stopname)
+stopwords=[]
 print "分词..."
 lines = fenci.fenci(rows, stopwords)
 fenci.outfile(lines)
