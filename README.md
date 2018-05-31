@@ -64,17 +64,19 @@ print(", ".join(seg_list))
 
 #### 关于K-means算法
 
-事先确定常数K，常数K意味着最终的聚类类别数，首先随机选定初始点为质心，并通过计算每一个样本与质心之间的相似度(这里为欧式距离)，将样本点归到最相似的类中，接着，重新计算每个类的质心(即为类中心)，重复这样的过程，知道质心不再改变，最终就确定了每个样本所属的类别以及每个类的质心。
+k-means 算法将一组 ![N](http://sklearn.apachecn.org/cn/0.19.0/_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png) 样本 ![X](http://sklearn.apachecn.org/cn/0.19.0/_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png) 划分成 ![K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/684381a21cd73ebbf43b63a087d3f7410ee99ce8.png) 不相交的 簇 ![C](http://sklearn.apachecn.org/cn/0.19.0/_images/math/afce44aa7c55836ca9345404c22fc7b599d2ed84.png), 每个都用该簇中的样本的均值 ![\mu_j](http://sklearn.apachecn.org/cn/0.19.0/_images/math/169afc05a24e52e428b94e0041ab0577a2d580ee.png) 描述。 这个均值通常被称为簇的 “质心”; 注意，它们一般不是从 ![X](http://sklearn.apachecn.org/cn/0.19.0/_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png) 中挑选出的点，虽然它们是处在同一个 空间。 K-means算法旨在选择最小化惯性或 簇内和的平方和的标准的质心:
 
-算法的时间复杂度上界为`O(n*k*t)`, 其中t是迭代次数。
+![\sum_{i=0}^{n}\min_{\mu_j \in C}(||x_j - \mu_i||^2)](http://sklearn.apachecn.org/cn/0.19.0/_images/math/1886f2c69775746ac7b6c1cdd88c53c676839015.png)
 
-#### 实现方式
+K-means 通常被称为劳埃德算法。在基本术语中，算法有三个步骤。、 第一步是选择初始质心，最基本的方法是从 ![X](http://sklearn.apachecn.org/cn/0.19.0/_images/math/7a7bb470119808e2db2879fc2b2526f467b7a40b.png) 数据集中选择 ![k](http://sklearn.apachecn.org/cn/0.19.0/_images/math/0b7c1e16a3a8a849bb8ffdcdbf86f65fd1f30438.png) 个样本。初始化完成后，K-means 由两个其他步骤之间的循环组成。 第一步将每个样本分配到其 最近的质心。第二步通过取分配给每个先前质心的所有样本的平均值来创建新的质心。计算旧的和新的质心之间的差异，并且算法重复这些最后的两个步骤，直到该值小于阈值。换句话说，算法重复这个步骤，直到质心不再显著移动。
 
-定义sklearn的Kmeans模型，然后将计算好的TF-IDF矩阵传入模型产生结果。
+给定足够的时间，K-means 将总是收敛的，但这可能是 局部最优的。这很大程度上取决于质心的初始化。 因此，通常会进行几次初始化不同质心的计算。帮助解决这个问题的一种方法是 k-means++ 初始化方案。 这将初始化 质心通常彼此远离，导致比随机初始化更好的结果。
 
-#### 簇类数目选择
+#### 实现过程
 
-根据计算轮廓系数确定。
+#### 簇类数目确定
+
+##### 轮廓(Silhouette)系数
 
 1. 计算样本i到同簇其他样本的平均距离ai。ai 越小，说明样本i越应该被聚类到该簇。将ai 称为样本i的**簇内不相似度**。
 
@@ -95,6 +97,40 @@ print(", ".join(seg_list))
    - 若si 近似为0，则说明样本i在两个簇的边界上。
 
  **所有样本的s i 的均值称为聚类结果的轮廓系数**，是该聚类是否合理、有效的度量。
+
+###### 优点
+
+- 对于不正确的 clustering （聚类），分数为 -1 ， highly dense clustering （高密度聚类）为 +1 。零点附近的分数表示 overlapping clusters （重叠的聚类）。
+- 当 clusters （簇）密集且分离较好时，分数更高，这与 cluster （簇）的标准概念有关。
+
+######  缺点
+
+- convex clusters（凸的簇）的 Silhouette Coefficient 通常比其他类型的 cluster （簇）更高，例如通过 DBSCAN 获得的基于密度的 cluster（簇）。
+
+##### Calinski-Harabaz 指数
+
+如果不知道真实数据的类别标签，则可以使用 Calinski-Harabaz 指数来评估模型，其中较高的 Calinski-Harabaz 的得分与具有更好定义的聚类的模型相关。
+
+对于 ![k](http://sklearn.apachecn.org/cn/0.19.0/_images/math/0b7c1e16a3a8a849bb8ffdcdbf86f65fd1f30438.png) 簇，Calinski-Harabaz 得分 ![s](http://sklearn.apachecn.org/cn/0.19.0/_images/math/63751cb2e98ba393b0f22e45ca127c3cebb61487.png) 是作为 between-clusters dispersion mean （簇间色散平均值）与 within-cluster dispersion（群内色散之间）的比值给出的:
+
+![s(k) = \frac{\mathrm{Tr}(B_k)}{\mathrm{Tr}(W_k)} \times \frac{N - k}{k - 1}](http://sklearn.apachecn.org/cn/0.19.0/_images/math/66e217c045c57898975dd3d3ea651747ed9a5c19.png)
+
+其中 ![B_K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/b0cd669148609abb7c9af6fa3e706b7b79577b5c.png) 是 between group dispersion matrix （组间色散矩阵）， ![W_K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/e7d8801b1f41dc013f994d181b7826d2a0fc4f88.png) 是由以下定义的 within-cluster dispersion matrix （群内色散矩阵）:
+
+![W_k = \sum_{q=1}^k \sum_{x \in C_q} (x - c_q) (x - c_q)^T](http://sklearn.apachecn.org/cn/0.19.0/_images/math/48eba4dc277d1cbf5d1f61fe7ec36042198b7a98.png)
+
+![B_k = \sum_q n_q (c_q - c) (c_q - c)^T](http://sklearn.apachecn.org/cn/0.19.0/_images/math/488a40c7485d836c31ddf1b5d4267429d625983e.png)
+
+![N](http://sklearn.apachecn.org/cn/0.19.0/_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png) 为数据中的点数，![C_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/98a0fb38d49709c39a35007dd817dff8b7b3e68a.png) 为 cluster （簇） ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 中的点集， ![c_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/70819c4bdcf3aecea24eac192c0365fa0ccab488.png) 为 cluster（簇） ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 的中心， ![c](http://sklearn.apachecn.org/cn/0.19.0/_images/math/ae12a24f88803b5895632e4848d87d46483c492c.png) 为 ![E](http://sklearn.apachecn.org/cn/0.19.0/_images/math/4b6222b865b812d2a59368cd1629eed6b54454d5.png) 的中心， ![n_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/435c528d448d9b4bdaf384010cede06da9c69c32.png) 为 cluster（簇） ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 中的点数。
+
+###### 优点
+
+- 当 cluster （簇）密集且分离较好时，分数更高，这与一个标准的 cluster（簇）有关。
+- 得分计算很快
+
+###### 缺点
+
+- 凸的簇的 Calinski-Harabaz index（Calinski-Harabaz 指数）通常高于其他类型的 cluster（簇），例如通过 DBSCAN 获得的基于密度的 cluster（簇）。
 
 ### 文本分类(X)
 
@@ -202,11 +238,15 @@ sudo pip install {name}
 
 ![分词展示](/home/whao/Desktop/深度截图_选择区域_20180531040659.png)
 
-### 文本聚类(X)
+### 文本聚类
 
-#### 运行结果(X)
+#### 簇类数目选取
 
-#### 性能评估(X)
+![](/home/whao/Desktop/kzhi.png)
+
+#### 运行时间
+
+![](/home/whao/Desktop/time.png)
 
 ### 文本分类(X)
 

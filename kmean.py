@@ -14,8 +14,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn import metrics
-from sklearn.cluster import AgglomerativeClustering, Birch, KMeans
+from sklearn.cluster import (AgglomerativeClustering, Birch, KMeans,
+                             DBSCAN,MiniBatchKMeans)
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.decomposition import PCA
 
 databasename = 'data.db'
 
@@ -59,26 +61,25 @@ def gettfidf(lines):
 
 def PCA(tfidf, dimension):
     weight = tfidf.toarray()
-    from sklearn.decomposition import PCA
-    print '原有维度: ', len(weight[0])
+
+    print u'原有维度: ', len(weight[0])
     pca = PCA(n_components=dimension)  # 初始化PCA
     X = pca.fit_transform(weight)  # 返回降维后的数据
-    print '降维后维度: ', len(X[0])
+    print u'降维后维度: ', len(X[0])
     return X
 
 # Kmeans聚类
 
 
 def kmeans(tfidf, k):
-    clusterer = KMeans(n_clusters=k, max_iter=100, n_init=1,
-                       init='k-means++')
+    clusterer = KMeans(n_clusters=k,init='k-means++')
     # clusterer = AgglomerativeClustering(n_clusters=k)
     y = clusterer.fit_predict(tfidf)
-    return y
+    return y,clusterer
 
 
 def birch(X, k):
-    clusterer = Birch(n_clusters=k)
+    clusterer = DBSCAN(n_jobs=-1)
     y = clusterer.fit_predict(X)
     print y
     return y
@@ -115,33 +116,29 @@ def Draw(silhouette_avg, sample_silhouette_values, X, y, k):
     plt.show()
 
 
-def getplot(point):
-    plt.plot(10, point, 'bx-')
-    plt.grid(True)
-    plt.xlabel('Number of clusters')
-    plt.ylabel('Average within-cluster sum of squares')
-    plt.title('Elbow for Kmeans clustering')
-    plt.show()
-
-
 if __name__ == '__main__':
+    k=19
     print u"Begin"
     lines = getlist()
     print u"求tf-idf..."
     tfidf = gettfidf(lines)
-    X = PCA(tfidf, 10000)
+    X = tfidf.toarray()
     print u'K-means...'
-    # point=[]
-    for k in range(2, 10):
-        #     result = kmeans(tfidf, k)
-        #     print metrics.calinski_harabaz_score(X, result)
-        #     point.append(sum(np.min(cdist(X, result.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0])
-        # print u'评估...'
-        # getplot(point)
-        y = birch(X, k)
-        silhouette_avg = metrics.silhouette_score(X, y)  # 平均轮廓系数
-        print silhouette_avg
-        sample_silhouette_values = metrics.silhouette_samples(X, y)  # 每个点的轮廓系数
-        Draw(silhouette_avg, sample_silhouette_values, X, y, k)
+    #for k in range(2, K):
+    start = time.time()
+    y,clu = kmeans(tfidf, k)
+    stop=time.time()
+    print u'聚类时间为：'+str(stop- start)
+    cen=clu.cluster_centers_
+    np.save('center',cen)
+    # print metrics.calinski_harabaz_score(X, y)
+    # point.append(sum(np.min(cdist(X, result.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0])
+    # y = birch(X, k)
+    # silhouette_avg = metrics.silhouette_score(X, y)  # 平均轮廓系数
+    # print silhouette_avg
+    # point.append(silhouette_avg)
+    # sample_silhouette_values = metrics.silhouette_samples(X, y)  # 每个点的轮廓系数
+    # Draw(silhouette_avg, sample_silhouette_values, X, y, k)
+    #print y
     #print u"更新分类..."
-    # updatesql(result)
+    #updatesql(y)

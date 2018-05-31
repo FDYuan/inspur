@@ -6,12 +6,17 @@
 import datetime
 import sqlite3
 import time
+import sys
 
 import jieba.analyse
 import numpy as np
 import scipy.stats
 from numpy import linalg
 from scipy.sparse import csr
+
+np.seterr(divide='ignore', invalid='ignore')
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 # from fenci import FenCi
 
@@ -50,22 +55,9 @@ def getweight(data):
 
 # 计算两个变量的夹角
 def cosvector(vec1, vec2):
-    num = float(vec1.T * vec2)  # 若为行向量则 A * B.T
-    denom = linalg.norm(vec1) * linalg.norm(vec2)
-    cos = num / denom  # 余弦值
+    cos=np.dot(vec1,vec2)/(np.linalg.norm(vec1)*(np.linalg.norm(vec2)))  
     return cos
-def coscos(vec1,vec2):
-    dot_product = 0.0
-    normA = 0.0
-    normB = 0.0
-    for a, b in zip(vec1, vec2):
-        dot_product += a * b
-        normA += a ** 2
-        normB += b ** 2
-    if normA == 0.0 or normB == 0.0:
-        return 0
-    else:
-        return round(dot_product / ((normA**0.5)*(normB**0.5)) * 100, 2)
+
 
 # 计算用户的特征变量
 def getvector(names, words):
@@ -81,10 +73,9 @@ def getvector(names, words):
 # 计算夹角的算式
 def getcos(mat, vec):
     mat=mat.tolist()
-    # arr=mat.toarray()
-    re = np.zeros(mat.shape[0])
-    for i in range(mat.shape[1]):
-        re[i] = cosvector(mat.getrow(i).toarray(), vec)
+    re=[]
+    for i in range(mat.shape[0]):
+        re.append(cosvector(mat.getrow(i).toarray(), vec))
     return re
 
 
@@ -97,16 +88,19 @@ def getK(cos, clicks, times):
 # 分词
 # ob = FenCi()
 # stopwords = ob.stopword('stopword.txt')
+start =time.time()
 jieba.analyse.set_stop_words('stopword.txt')
 lines = jieba.analyse.extract_tags(input_text)
 # 计算向量夹角
 mat = np.load('mat.npy')
 names = np.load('names.npy')
-print '向量计算...'
+print u'向量计算...'
 vec = getvector(names, lines)
 cos = getcos(mat, vec)
+stop=time.time()
+print stop -start
 # 权值计算
-data = getdata(databasename)
-clicks, times = getweight(data)
-weight = getK(cos, clicks, times)
-print weight.sort()
+#data = getdata(databasename)
+#, times = getweight(data)
+#weight = getK(cos, clicks, times)
+

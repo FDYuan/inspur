@@ -14,33 +14,36 @@ a{
     position: relative;
 }
 .logo{
-    margin-top: 16%;
+    margin-top: 10%;
     margin-bottom: 2%; 
     font-size: 64px;
     display: block;
+    background-color: aqua;
+    width: 10%;
+}
+.inspur{
+
 }
 .logo a{
-    color: #16a085;
+    background-color: blue;
     transition: .25s;
     background-color: transparent;
     font-family: 'CinzelDecorative';
 }
 .frame{
     width: 30%;
-    font-size: 16px;
-    line-height: 2em;
-    border: 1px #16a085 solid;
-    border-radius: 5px;
+    font: 16px arial;
+    line-height: 1.2em;
+    border: 1px solid #b8b8b8;
+    border-bottom: 1px solid #ccc;
+    padding: 9px 7px;
 }
 .search{
     margin-bottom: 2%;
 }
-.button{
-
-}
 .btn{
     display: inline-block;
-    padding: 6px 20px; 
+    padding: 6px 24px; 
     font-size: 16px;
     color:#757575;
     background-color: #f2f2f2;
