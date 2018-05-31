@@ -14,8 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn import metrics
-from sklearn.cluster import (AgglomerativeClustering, Birch, KMeans,
-                             MiniBatchKMeans)
+from sklearn.cluster import AgglomerativeClustering, Birch, KMeans
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 databasename = 'data.db'
