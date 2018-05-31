@@ -74,6 +74,10 @@ K-means 通常被称为劳埃德算法。在基本术语中，算法有三个步
 
 #### 实现过程
 
+模块流程图如下：
+
+![](/home/whao/Desktop/深度截图_选择区域_20180531210556.png)
+
 #### 簇类数目确定
 
 ##### 轮廓(Silhouette)系数
@@ -111,17 +115,17 @@ K-means 通常被称为劳埃德算法。在基本术语中，算法有三个步
 
 如果不知道真实数据的类别标签，则可以使用 Calinski-Harabaz 指数来评估模型，其中较高的 Calinski-Harabaz 的得分与具有更好定义的聚类的模型相关。
 
-对于 ![k](http://sklearn.apachecn.org/cn/0.19.0/_images/math/0b7c1e16a3a8a849bb8ffdcdbf86f65fd1f30438.png) 簇，Calinski-Harabaz 得分 ![s](http://sklearn.apachecn.org/cn/0.19.0/_images/math/63751cb2e98ba393b0f22e45ca127c3cebb61487.png) 是作为 between-clusters dispersion mean （簇间色散平均值）与 within-cluster dispersion（群内色散之间）的比值给出的:
+对于 ![k](http://sklearn.apachecn.org/cn/0.19.0/_images/math/0b7c1e16a3a8a849bb8ffdcdbf86f65fd1f30438.png) 簇，Calinski-Harabaz 得分 ![s](http://sklearn.apachecn.org/cn/0.19.0/_images/math/63751cb2e98ba393b0f22e45ca127c3cebb61487.png) 是作为簇间色散平均值与群内色散之间的比值给出的:
 
 ![s(k) = \frac{\mathrm{Tr}(B_k)}{\mathrm{Tr}(W_k)} \times \frac{N - k}{k - 1}](http://sklearn.apachecn.org/cn/0.19.0/_images/math/66e217c045c57898975dd3d3ea651747ed9a5c19.png)
 
-其中 ![B_K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/b0cd669148609abb7c9af6fa3e706b7b79577b5c.png) 是 between group dispersion matrix （组间色散矩阵）， ![W_K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/e7d8801b1f41dc013f994d181b7826d2a0fc4f88.png) 是由以下定义的 within-cluster dispersion matrix （群内色散矩阵）:
+其中 ![B_K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/b0cd669148609abb7c9af6fa3e706b7b79577b5c.png) 是 组间色散矩阵， ![W_K](http://sklearn.apachecn.org/cn/0.19.0/_images/math/e7d8801b1f41dc013f994d181b7826d2a0fc4f88.png) 是由以下定义的 群内色散矩阵:
 
 ![W_k = \sum_{q=1}^k \sum_{x \in C_q} (x - c_q) (x - c_q)^T](http://sklearn.apachecn.org/cn/0.19.0/_images/math/48eba4dc277d1cbf5d1f61fe7ec36042198b7a98.png)
 
 ![B_k = \sum_q n_q (c_q - c) (c_q - c)^T](http://sklearn.apachecn.org/cn/0.19.0/_images/math/488a40c7485d836c31ddf1b5d4267429d625983e.png)
 
-![N](http://sklearn.apachecn.org/cn/0.19.0/_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png) 为数据中的点数，![C_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/98a0fb38d49709c39a35007dd817dff8b7b3e68a.png) 为 cluster （簇） ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 中的点集， ![c_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/70819c4bdcf3aecea24eac192c0365fa0ccab488.png) 为 cluster（簇） ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 的中心， ![c](http://sklearn.apachecn.org/cn/0.19.0/_images/math/ae12a24f88803b5895632e4848d87d46483c492c.png) 为 ![E](http://sklearn.apachecn.org/cn/0.19.0/_images/math/4b6222b865b812d2a59368cd1629eed6b54454d5.png) 的中心， ![n_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/435c528d448d9b4bdaf384010cede06da9c69c32.png) 为 cluster（簇） ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 中的点数。
+![N](http://sklearn.apachecn.org/cn/0.19.0/_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png) 为数据中的点数，![C_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/98a0fb38d49709c39a35007dd817dff8b7b3e68a.png) 为簇 ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 中的点集， ![c_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/70819c4bdcf3aecea24eac192c0365fa0ccab488.png) 为 簇![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 的中心， ![c](http://sklearn.apachecn.org/cn/0.19.0/_images/math/ae12a24f88803b5895632e4848d87d46483c492c.png) 为 ![E](http://sklearn.apachecn.org/cn/0.19.0/_images/math/4b6222b865b812d2a59368cd1629eed6b54454d5.png) 的中心， ![n_q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/435c528d448d9b4bdaf384010cede06da9c69c32.png) 为 簇 ![q](http://sklearn.apachecn.org/cn/0.19.0/_images/math/620a3ce6403ec82f1347af9985bc03f7a9382f4a.png) 中的点数。
 
 ###### 优点
 
@@ -130,13 +134,13 @@ K-means 通常被称为劳埃德算法。在基本术语中，算法有三个步
 
 ###### 缺点
 
-- 凸的簇的 Calinski-Harabaz index（Calinski-Harabaz 指数）通常高于其他类型的 cluster（簇），例如通过 DBSCAN 获得的基于密度的 cluster（簇）。
+- 凸的簇的Calinski-Harabaz 指数通常高于其他类型的 cluster（簇）。
 
-### 文本分类(X)
+### 文本分类
 
-#### 关于Naive Bayesian算法(X)
+#### 关于Naive Bayesian算法
 
-#### 实现方式(X)
+#### 实现方式
 
 ### 推荐算法
 
@@ -144,7 +148,9 @@ K-means 通常被称为劳埃德算法。在基本术语中，算法有三个步
 
 常见的推荐算法有：基于内容的推荐算法、协同过滤推荐算法。基于内容的推荐算法是根据用户过去喜欢的物品，为用户推荐和他过去喜欢的物品相似的物品。协同过滤推荐算法是通过对用户历史行为数据的挖掘发现用户的偏好，基于不同的偏好对用户进行群组划分并推荐品味相似的商品。
 
-由于对用户历史行为信息的缺乏，本程序采用基于内容的推荐算法。
+由于对用户历史行为信息的缺乏，本程序采用基于内容的推荐算法。基于内容的信息推荐方法的理论依据主要来自于信息检索和信息过滤，所谓的基于内容的推荐方法就是根据用户过去的浏览记录来向用户推荐用户没有接触过的推荐项。在计算用户特征向量和被推荐项的特征向量的相似性时，一般使用的是cosine方法，计算两个向量之间夹角的cosine值。
+
+通常点击率是作为推荐算法比较重要的一部分，但考虑到所给实验数据日期和点击量模型的不确定性，本权值算式主要侧重于余弦相似度，时效性作为新闻的突出特点也将比重大于点击率。
 
 #### 实现方式
 
@@ -159,35 +165,58 @@ $$
 
 [余弦相似度]: https://zh.wikipedia.org/zh-hans/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E6%80%A7
 
+余弦相似度衡量的是2个向量间的夹角大小，通过夹角的余弦值表示结果，因此2个向量的余弦相似度为：
 $$
 cos\beta =\sum_{1}^{n} \left ( a_{i}*b_{i} \right )/\sqrt{\sum_{1}^{n}a_{i}^2]}*\sqrt{\sum_{1}^{n}b_{i}^2]}
 $$
 
+分子为向量A与向量B的点乘，分母为二者各自的L2相乘，即将所有维度值的平方相加后开方。 
+
+余弦相似度的取值为[-1,1]，值越大表示越相似。
+
 ###### 日期权重计算
 
+[baidu指数]: https://index.baidu.com/#/
 [Goodle 趋势]: https://trends.google.com/trends/
 
-假设新闻点击为独立事件。计算一段时间内新闻的点击量，其符合**泊松分布**。根据 Google 趋势中新闻点击量的统计，我们可以知道泊松分布模型适应大部分情况。而且观察新闻点击的分布区间，我们可以一般认为该样本的新闻时效性为**两天**。
+假设新闻点击为独立事件。计算一段时间内新闻的点击量，其符合**正态分布**。根据baidu指数以及Google 趋势中新闻点击量的统计，我们可以知道泊松分布模型适应大部分情况。而且观察新闻点击的分布区间，我们可以一般认为该样本的新闻时效性为**两天**。
 
-###### 点击量权重计算(X)
+![](/home/whao/Desktop/深度截图_选择区域_20180531202448.png)
 
-根据数据库中的样本计算可以知道点击量同样满足**泊松分布**。
+###### 点击量权重计算
 
+根据数据库中的样本计算可以知道点击量满足**泊松分布**，为了计算的方便我们同样采取正态分布模型计算点击量的分布。
 
+n为新闻点击量，m为
+
+###### 泊松分布
 
 泊松分布公式为：
 $$
 P(X=k)=λ^k*e^-λ/k!~~,~~k=0,1,...
 $$
 
+泊松分布的参数λ是单位时间(或单位面积)内随机事件的平均发生率。 泊松分布适合于描述单位时间内随机事件发生的次数。
 
-### 前端和后端设计(X)
+ 泊松分布的均值和方差均为![img](https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/s%3D13/sign=b9dc53469445d688a702b6a7a4c27c14/63d0f703918fa0ec72dbfe78209759ee3d6ddba3.jpg) ，特征函数为 ![img](https://gss3.bdstatic.com/-Po3dSag_xI4khGkpoWK1HF6hhy/baike/s%3D151/sign=0d3cb74d2e381f309a1989ac98014c67/6a63f6246b600c3314575bbd1c4c510fd9f9a19d.jpg)
+
+###### 缺点
+
+余弦相似度受到向量的平移影响，上式如果将x平移到x+1,余弦值就会改变 
+
+#### 实现过程
+
+模块流程图如下：
+
+![](/home/whao/Desktop/深度截图_选择区域_20180531211937.png)
+
+### 前端和后端设计
 
 前端采用bootstrap设计，后端采用django框架设计
 
-#### 目录结构(X)
+#### 目录结构
 
-#### 架构交互图(X)
+#### 架构交互图
 
 ## 数据接口设计
 
@@ -195,20 +224,21 @@ $$
 
 data.db
 
-|  属性   |     类型     |
-| :-----: | :----------: |
-|   id    |   integer    |
-|  title  | varchar(255) |
-| content |     text     |
-| clicks  |   integer    |
-|  date   |     text     |
-|  type   |   integer    |
+|  属性   |     类型     |  描述  |
+| :-----: | :----------: | :----: |
+|   id    |   integer    | 新闻ID |
+|  title  | varchar(255) |  标题  |
+| content |     text     |  正文  |
+| clicks  |   integer    | 点击量 |
+|  date   |     text     |  日期  |
+|  type   |   integer    |  类型  |
+| weight  |    float     |  权值  |
 
 ## 系统运行测试
 
 ### 依赖项
 
-本系统依赖Python2.7运行环境并需要安装以下外部库：
+本系统依赖Python2.7 64位运行环境并需要安装以下外部库：
 
 1. beautifulsoup4
 2. jieba
@@ -248,19 +278,19 @@ sudo pip install {name}
 
 ![](/home/whao/Desktop/time.png)
 
-### 文本分类(X)
+### 文本分类
 
-#### 运行结果(X)
+#### 运行结果
 
-#### 性能评估(X)
+#### 性能评估
 
-### 推荐展示(X)
+### 推荐展示
 
-#### 运行结果(X)
+#### 运行结果
 
-#### 前端展示(X)
+#### 前端展示
 
-#### 性能评估(X)
+#### 性能评估
 
 ## 核心代码
 
@@ -297,7 +327,7 @@ for j in range(countt):
     writer.writerow((mylist_class[k].text, mylist_title[k].text, mylist_url[k], content))#将数据写到csv文件中
 ```
 
-## 存在的问题(X)
+## 存在的问题
 
 
 

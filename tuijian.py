@@ -81,7 +81,10 @@ def getcos(mat, vec):
 
 # 推荐K值
 def getK(cos, clicks, times):
-    re = 0.7*cos+0.2*clicks+0.1*times
+    re=[]
+    for i in range(len(cos)):
+        k = 0.7*cos[i]+0.2*clicks[i]+0.1*times[i]
+        re.append(k)
     return re
 
 
@@ -100,7 +103,8 @@ cos = getcos(mat, vec)
 stop=time.time()
 print stop -start
 # 权值计算
-#data = getdata(databasename)
-#, times = getweight(data)
-#weight = getK(cos, clicks, times)
+data = getdata(databasename)
+clicks,times = getweight(data)
+weight = getK(cos, clicks, times)
+print weight
 
