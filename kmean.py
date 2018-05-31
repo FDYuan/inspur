@@ -14,19 +14,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn import metrics
-from sklearn.cluster import AgglomerativeClustering, KMeans, MiniBatchKMeans
+from sklearn.cluster import (AgglomerativeClustering, Birch, KMeans,
+                             MiniBatchKMeans)
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 databasename = 'data.db'
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
+
 def getlist():
-    lines=[]
+    lines = []
     with codecs.open('cut.csv', 'r', 'utf-8') as f:
         for line in f:
-            lines.append(str(line).replace(',',' '))
+            lines.append(str(line).replace(',', ' '))
     return lines
+
+
 
 # 更新数据库
 def updatesql(result):
@@ -45,24 +50,39 @@ def updatesql(result):
 def gettfidf(lines):
     vectorizer = CountVectorizer()
     transformer = TfidfTransformer()
-    mat=vectorizer.fit_transform(lines)
+    mat = vectorizer.fit_transform(lines)
     tfidf = transformer.fit_transform(mat)
-    names=vectorizer.get_feature_names()
-    np.save('mat',mat)
-    np.save('names',names)
-    X = tfidf.toarray()
-    return X,tfidf
+    names = vectorizer.get_feature_names()
+    np.save('mat', mat)
+    np.save('names', names)
+    return tfidf
 
+
+def PCA(tfidf, dimension):
+    weight = tfidf.toarray()
+    from sklearn.decomposition import PCA
+    print '原有维度: ', len(weight[0])
+    pca = PCA(n_components=dimension)  # 初始化PCA
+    X = pca.fit_transform(weight)  # 返回降维后的数据
+    print '降维后维度: ', len(X[0])
+    return X
 
 # Kmeans聚类
-def process(tfidf, k):
-    km_cluster = KMeans(n_clusters=k, max_iter=100, n_init=1,
-                        init='k-means++')
-    # km_cluster = MiniBatchKMeans(n_clusters=10, max_iter=100, n_init=1,
-    #                     init='k-means++',init_size=3000,batch_size=1000)
-    # km_cluster = AgglomerativeClustering(n_clusters=k)
-    result = km_cluster.fit_predict(tfidf)
-    return result
+
+
+def kmeans(tfidf, k):
+    clusterer = KMeans(n_clusters=k, max_iter=100, n_init=1,
+                       init='k-means++')
+    # clusterer = AgglomerativeClustering(n_clusters=k)
+    y = clusterer.fit_predict(tfidf)
+    return y
+
+
+def birch(X, k):
+    clusterer = Birch(n_clusters=k)
+    y = clusterer.fit_predict(X)
+    print y
+    return y
 
 
 def Draw(silhouette_avg, sample_silhouette_values, X, y, k):
@@ -98,28 +118,31 @@ def Draw(silhouette_avg, sample_silhouette_values, X, y, k):
 
 def getplot(point):
     plt.plot(10, point, 'bx-')
-    plt.grid(True) 
-    plt.xlabel('Number of clusters') 
-    plt.ylabel('Average within-cluster sum of squares') 
+    plt.grid(True)
+    plt.xlabel('Number of clusters')
+    plt.ylabel('Average within-cluster sum of squares')
     plt.title('Elbow for Kmeans clustering')
     plt.show()
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     print u"Begin"
-    lines=getlist()
+    lines = getlist()
     print u"求tf-idf..."
-    X,tfidf = gettfidf(lines)
+    tfidf = gettfidf(lines)
+    X = PCA(tfidf, 10000)
     print u'K-means...'
-    point=[]
-    for k in range(2,10):
-        result = process(tfidf, k)
-        print metrics.calinski_harabaz_score(X, result)
-        point.append(sum(np.min(cdist(X, result.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0]) 
-    print u'评估...'
-    getplot(point)
+    # point=[]
+    for k in range(2, 10):
+        #     result = kmeans(tfidf, k)
+        #     print metrics.calinski_harabaz_score(X, result)
+        #     point.append(sum(np.min(cdist(X, result.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0])
+        # print u'评估...'
+        # getplot(point)
+        y = birch(X, k)
+        silhouette_avg = metrics.silhouette_score(X, y)  # 平均轮廓系数
+        print silhouette_avg
+        sample_silhouette_values = metrics.silhouette_samples(X, y)  # 每个点的轮廓系数
+        Draw(silhouette_avg, sample_silhouette_values, X, y, k)
     #print u"更新分类..."
-    #updatesql(result)
-    #silhouette_avg = metrics.silhouette_score(X, result)  # 平均轮廓系数
-    #print silhouette_avg # 每个点的轮廓系数
-    #sample_silhouette_values = metrics.silhouette_samples(X, result)
-    #Draw(silhouette_avg, sample_silhouette_values, X, result, k)
+    # updatesql(result)

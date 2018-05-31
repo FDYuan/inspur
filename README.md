@@ -36,9 +36,9 @@
 
 ## 程序模块设计
 
-### *网络爬虫*
+### *网络爬虫*(X)
 
-#### 实现方式
+#### 实现方式(X)
 
 ### 分词
 
@@ -68,11 +68,16 @@ print(", ".join(seg_list))
 
 定义sklearn的Kmeans模型，然后将计算好的TF-IDF矩阵传入模型产生结果。
 
-### 文本分类
+### 文本分类(X)
 
-#### 关于Naive Bayesian算法
+#### 关于Naive Bayesian算法(X)
 
-#### 实现方式
+
+表示事件B已经发生的前提下，事件A发生的概率，叫做事件B发生下事件A的条件概率。其基本求解公式为：
+
+ 贝叶斯定理之所以有用，是因为我们在生活中经常遇到这种情况：我们可以很容易直接得出P(A|B)，P(B|A)则很难直接得出，但我们更关心P(B|A)，贝叶斯定理就为我们打通从P(A|B)获得P(B|A)的道路。
+
+#### 实现方式(X)
 
 ### 推荐算法
 
@@ -105,7 +110,7 @@ $$
 
 假设新闻点击为独立事件。计算一段时间内新闻的点击量，其符合**泊松分布**。根据 Google 趋势中新闻点击量的统计，我们可以知道泊松分布模型适应大部分情况。而且观察新闻点击的分布区间，我们可以一般认为该样本的新闻时效性为**两天**。
 
-###### 点击量权重计算
+###### 点击量权重计算(X)
 
 根据数据库中的样本计算可以知道点击量同样满足**泊松分布**。
 
@@ -117,13 +122,13 @@ P(X=k)=λ^k*e^-λ/k!~~,~~k=0,1,...
 $$
 
 
-### 前端和后端设计
+### 前端和后端设计(X)
 
 前端采用bootstrap设计，后端采用django框架设计
 
-#### 目录结构
+#### 目录结构(X)
 
-#### 架构交互图
+#### 架构交互图(X)
 
 ## 数据接口设计
 
@@ -142,11 +147,31 @@ data.db
 
 ## 系统运行测试
 
+### 依赖项
+
+本系统依赖Python2.7运行环境并需要安装以下外部库：
+
+1. beautifulsoup4
+2. jieba
+3. scipy
+4. sklearn
+5. matplotlib
+
+安装方法为：
+
+```bash
+sudo pip install {name}
+```
+
 ### 网络爬虫
 
 #### 运行结果
 
+![](/home/whao/Desktop/TIM图片20180531081620.png)
+
 #### 性能评估
+
+![](/home/whao/Desktop/TIM图片20180531081605.png)
 
 ###新闻分词
 
@@ -154,25 +179,62 @@ data.db
 
 ![分词展示](/home/whao/Desktop/深度截图_选择区域_20180531040659.png)
 
-#### 性能评估
+### 文本聚类(X)
 
-在控制同一聚类条件下，结果如下：
+#### 运行结果(X)
 
-### 文本聚类
+#### 性能评估(X)
 
-#### 运行结果
+### 文本分类(X)
 
-#### 性能评估
+#### 运行结果(X)
 
-### 推荐展示
+#### 性能评估(X)
 
-#### 运行结果
+### 推荐展示(X)
 
-#### 前端展示
+#### 运行结果(X)
 
-#### 性能评估
+#### 前端展示(X)
 
-## 存在的问题
+#### 性能评估(X)
+
+## 核心代码
+
+### 网络爬虫
+
+
+
+```python
+today = datetime.date.today()    #获取当前时间
+times = 100   #要爬取的天数
+ago=600       #从600天以前的信息开始爬
+for i in range(times):
+    dateadd = datetime.timedelta(days=i+ago)
+    olddate = (today - dateadd).strftime('%Y/%m%d')
+    url = "http://www.chinanews.com/scroll-news/" + olddate + "/news.shtml"   #自动更新链接中的日期
+    print("已获取url："+url + "---------------")
+    soup = delete_Script(getSoup(url))#获取一个BeautifulSoup对象
+
+    mylist_class.extend(soup.findAll("div", class_="dd_lm"))# 类别标签
+    mylist_title.extend(soup.findAll("div", class_="dd_bt"))# 链接标签
+
+countt = len(mylist_class)
+for j in range(countt):
+    tempurl = mylist_title[j].a["href"]#查找相应标签中的url
+    mylist_url.append(tempurl)#添加到列表中
+    try:
+        if re.compile(r'http').findall(str(mylist_url[k])):
+            mysoup = delete_Script(getSoup(str(mylist_url[k])))#获取内容标签的BeautifulSoup
+        else:
+            mysoup = delete_Script(getSoup("http://www.chinanews.com" + str(mylist_url[k])))
+        content = mysoup.find("div", "left_zw").text.strip() #获取正文内容
+    except:
+        continue
+    writer.writerow((mylist_class[k].text, mylist_title[k].text, mylist_url[k], content))#将数据写到csv文件中
+```
+
+## 存在的问题(X)
 
 
 
